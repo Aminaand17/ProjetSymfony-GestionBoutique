@@ -1,0 +1,99 @@
+{% extends 'baseCO.html.twig' %}
+
+{% block title %}Log in!{% endblock %}
+
+{% block body %}
+    <div class="bg-gray-200 h-screen flex justify-center items-center">
+        <div class="w-10/12 sm:w-10/12 md:w-8/12 flex shadow-xl rounded-lg">
+            <!-- Partie gauche -->
+            <div class="left-section w-1/2 bg-purple-300 flex items-center justify-center flex-col relative p-6">
+                <h1 class="text-4xl font-bold mb-2 text-center">GESTION BOUTIQUE</h1>
+                <h2 class="text-2xl mb-2 text-center">Bienvenue Diallo Boutique</h2>
+                <p class="text-base mb-2 text-center">La plateforme idéale pour gérer vos ventes, articles et clients avec efficacité</p>
+                <div class="ball top-12 left-12"></div>
+                <div class="ball bottom-12 right-12"></div>
+            </div>
+
+            <!-- Partie droite -->
+            <div class="right-section w-1/2 p-10 flex flex-col justify-center bg-white">
+                <h3 class="text-3xl font-bold text-center mb-4">Connexion</h3>
+                <p class="text-center mb-6">Connectez-vous pour accéder à votre espace de gestion</p>
+
+                <!-- Formulaire de connexion -->
+                <form method="POST">
+                    {% if error %}
+                        <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+                    {% endif %}
+
+                    {% if app.user %}
+                        <div class="mb-3">
+                            You are logged in as {{ app.user.userIdentifier }}, <a href="{{ path('app_logout') }}">Logout</a>
+                        </div>
+                    {% endif %}
+
+                    <div class="mb-4">
+                        <label for="inputLogin" class="block text-sm">Nom d'utilisateur</label>
+                        <input type="text" value="{{ last_username }}" name="login" id="inputLogin" class="w-full p-2 border rounded" autocomplete="username" required autofocus>
+                    </div>
+                    <div class="mb-4">
+                        <label for="inputPassword" class="block text-sm">Mot de passe</label>
+                        <input type="password" name="password" id="inputPassword" class="w-full p-2 border rounded" autocomplete="current-password" required>
+                    </div>
+
+                    <div class="flex justify-between mb-4">
+                        <a href="#" class="text-sm text-purple-500">Mot de passe oublié ?</a>
+                    </div>
+
+                    <button type="submit" class="w-full bg-purple-400 text-white py-2 px-4 rounded">Se connecter</button>
+
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .ball {
+            width: 60px;
+            height: 60px;
+            background-color: #ffffff;
+            border-radius: 50%;
+            position: absolute;
+            animation: moveBall 5s ease-in-out infinite;
+        }
+
+        .top-12 {
+            top: 12%;
+        }
+
+        .bottom-12 {
+            bottom: 12%;
+        }
+
+        .left-12 {
+            left: 12%;
+        }
+
+        .right-12 {
+            right: 12%;
+        }
+
+        @keyframes moveBall {
+            0% {
+                transform: translate(0, 0);
+            }
+            25% {
+                transform: translate(20px, 20px);
+            }
+            50% {
+                transform: translate(0, 40px);
+            }
+            75% {
+                transform: translate(-20px, 20px);
+            }
+            100% {
+                transform: translate(0, 0);
+            }
+        }
+    </style>
+{% endblock %}

@@ -1,0 +1,118 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container mx-auto p-6">
+    <div class="bg-white rounded-lg shadow-md p-4 mb-6 max-w-4xl mx-auto">
+        <h2 class="text-2xl font-bold text-purple-800 mb-4">Informations Client</h2>
+        <div class="flex items-center space-x-4 mb-6">
+            <div class="w-24 h-24 bg-gray-300 rounded-full overflow-hidden flex items-center justify-center">
+                <i class="fas fa-user-circle text-4xl text-gray-500"></i>
+            </div>
+            <div class="flex flex-col space-y-1">
+                <div class="flex items-center">
+                    <label for="clientName" class="font-medium text-gray-700 w-24">Nom :</label>
+                    <input type="text" id="clientName" value="{{ client.surname }}" readonly
+                           class="w-64 p-2 border border-gray-300 rounded-md shadow-sm bg-gray-100">
+                </div>
+                <div class="flex items-center">
+                    <label for="clientPhone" class="font-medium text-gray-700 w-24">Téléphone :</label>
+                    <input type="text" id="clientPhone" value="{{ client.telephone }}" readonly
+                           class="w-64 p-2 border border-gray-300 rounded-md shadow-sm bg-gray-100">
+                </div>
+                <div class="flex items-center">
+                    <label for="clientAddress" class="font-medium text-gray-700 w-24">Adresse :</label>
+                    <input type="text" id="clientAddress" value="{{ client.adresse }}" readonly
+                           class="w-64 p-2 border border-gray-300 rounded-md shadow-sm bg-gray-100">
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-4 mb-4">
+            <button id="filterSold" class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">
+                Soldées
+            </button>
+            <button id="filterNonSold" class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">
+                Non Soldées
+            </button>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-4 max-w-4xl mx-auto">
+        <h2 class="text-2xl font-bold text-purple-800 mb-4">Liste des Dettes</h2>
+        <table class="w-full table-auto border-collapse">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="py-2 px-4 text-left">Date</th>
+                    <th class="py-2 px-4 text-left">Montant</th>
+                    <th class="py-2 px-4 text-left">Montant Versé</th>
+                    <th class="py-2 px-4 text-left">Montant Restant</th>
+                    <th class="py-2 px-4 text-left">Statut</th> <!-- Nouvelle colonne Statut -->
+                    <th class="py-2 px-4 text-left">Action</th>
+                </tr>
+            </thead>
+            <tbody id="debtList">
+                {% for dette in client.dettes %}
+                <tr id="debt_{{ dette.id }}">
+                    <td class="py-2 px-4">{{ dette.createAt | date("d/m/Y") }}</td>
+                    <td class="py-2 px-4">{{ dette.montant }}</td>
+                    <td class="py-2 px-4">{{ dette.montantVerser }}</td>
+                    <td class="py-2 px-4" id="remaining_{{ dette.id }}">{{ dette.montantRestant }}</td>
+                    <td class="py-2 px-4" id="status_{{ dette.id }}">{{ dette.getStatutDette() }}</td>
+                    <td class="py-2 px-4">
+                        <a href="{{ path('dette_detail_client', {'id': dette.id}) }}" class="bg-purple-400 text-white px-3 py-2 rounded hover:bg-purple-600">
+                            Détails
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    document.getElementById('filterSold').addEventListener('click', function() {
+        filterDebts(true);
+    });
+
+    document.getElementById('filterNonSold').addEventListener('click', function() {
+        filterDebts(false);
+    });
+
+    function filterDebts(isSold) {
+        const rows = document.querySelectorAll('#debtList tr');
+        rows.forEach(row => {
+            const status = row.cells[4].textContent.toLowerCase(); // Colonne 4 pour le statut
+            if ((isSold && status === 'Soldée') || (!isSold && status === 'Non Soldée')) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const debtRows = document.querySelectorAll('#debtList tr');
+
+        debtRows.forEach(row => {
+            const montant = parseFloat(row.cells[1].textContent); // Montant de la dette
+            const montantVerser = parseFloat(row.cells[2].textContent); // Montant versé
+            const montantRestantCell = row.querySelector('[id^="remaining_"]');
+            const statusCell = row.querySelector('[id^="status_"]');
+
+            const montantRestant = montant - montantVerser;
+            montantRestantCell.textContent = montantRestant.toFixed(2);
+            if (montantRestant === 0) {
+                statusCell.textContent = 'Soldée';
+                statusCell.classList.add('text-green-500');
+                statusCell.classList.remove('text-red-500');
+            } else {
+                statusCell.textContent = 'Non Soldée';
+                statusCell.classList.add('text-red-500');
+                statusCell.classList.remove('text-green-500');
+            }
+        });
+    });
+</script>
+
+{% endblock %}

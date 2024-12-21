@@ -1,0 +1,198 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold text-purple-800 mb-6">Nouvelle Dette</h1>
+
+    <div id="alerts"></div> <!-- Zone pour afficher les alertes -->
+
+    <div class="bg-white rounded-lg shadow-md p-6">
+        {% if client %}
+            <input type="hidden" id="client_id" value="{{ client.id }}" />
+
+            <h2 class="text-xl font-bold text-gray-700 mb-4">Informations du Client</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block font-medium text-gray-700">Nom</label>
+                    <input type="text" readonly value="{{ client.surname }}" class="border border-gray-300 rounded px-4 py-2 w-full bg-gray-100">
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-700">Téléphone</label>
+                    <input type="text" readonly value="{{ client.telephone }}" class="border border-gray-300 rounded px-4 py-2 w-full bg-gray-100">
+                </div>
+            </div>
+        {% else %}
+            <div class="alert alert-warning">Le client n'a pas été trouvé.</div>
+        {% endif %}
+
+        <h2 class="text-xl font-bold text-gray-700 mb-4">Articles Disponibles</h2>
+        <div class="mb-4">
+            <input type="text" id="searchArticle" placeholder="Rechercher un article..." 
+                class="border border-gray-300 rounded px-4 py-2 w-full mb-4">
+            <table class="w-full border border-gray-300 rounded-md">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="px-4 py-2">Sélectionner</th>
+                        <th class="px-4 py-2">Libellé</th>
+                        <th class="px-4 py-2">Prix</th>
+                        <th class="px-4 py-2">Qte Stock</th>
+                    </tr>
+                </thead>
+                <tbody id="articlesList">
+                    {% for article in articles %}
+                        <tr>
+                            <td class="px-4 py-2 text-center">
+                                <input type="checkbox" class="articleCheckbox" data-id="{{ article.id }}" 
+                                    data-libelle="{{ article.libelle }}" data-prix="{{ article.prix }}" data-stock="{{ article.qteStock }}"/>
+                            </td>
+                            <td class="px-4 py-2">{{ article.libelle }}</td>
+                            <td class="px-4 py-2">{{ article.prix }}</td>
+                            <td class="px-4 py-2">{{ article.qteStock }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div id="paginationControls" class="mt-4 flex justify-center space-x-2"></div>
+        </div>
+
+        <h2 class="text-xl font-bold text-gray-700 mt-6 mb-4">Articles Sélectionnés</h2>
+        <table class="w-full border border-gray-300 rounded-md">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="px-4 py-2 text-left">Article</th>
+                    <th class="px-4 py-2 text-left">Prix</th>
+                    <th class="px-4 py-2 text-left">Quantité</th>
+                    <th class="px-4 py-2 text-left">Montant Total</th>
+                    <th class="px-4 py-2"></th>
+                </tr>
+            </thead>
+            <tbody id="selectedArticles"></tbody>
+        </table>
+
+        <div class="mt-4 text-right">
+            <h3 class="text-lg font-bold text-gray-700">Montant Total : <span id="totalAmount">0</span></h3>
+        </div>
+
+        <button id="saveDetteBtn" class="w-full bg-purple-500 text-white py-2 rounded-md mt-6 hover:bg-purple-700">
+            Enregistrer la Dette
+        </button>
+    </div>
+</div>
+
+<script>
+    const articlesList = document.getElementById('articlesList');
+    const selectedArticlesTable = document.getElementById('selectedArticles');
+    const totalAmountSpan = document.getElementById('totalAmount');
+    const saveDetteBtn = document.getElementById('saveDetteBtn');
+    const searchInput = document.getElementById('searchArticle');
+    const paginationControls = document.getElementById('paginationControls');
+    const rows = Array.from(articlesList.querySelectorAll('tr'));
+    const itemsPerPage = 2;
+    let currentPage = 1;
+
+    function showAlert(type, message) {
+        const alerts = document.getElementById('alerts');
+        const alertBox = document.createElement('div');
+        alertBox.className = `alert ${type === 'success' ? 'alert-success' : 'alert-danger'} my-4 p-4 rounded`;
+        alertBox.textContent = message;
+        alerts.appendChild(alertBox);
+        setTimeout(() => alertBox.remove(), 5000); // Supprimer l'alerte après 5 secondes
+    }
+
+    function handleArticleSelection(event) {
+        const checkbox = event.target;
+        const articleId = checkbox.dataset.id;
+        const articleName = checkbox.dataset.libelle;
+        const articlePrice = parseFloat(checkbox.dataset.prix);
+        const articleStock = parseInt(checkbox.dataset.stock, 10);
+
+        if (checkbox.checked) {
+            const row = document.createElement('tr');
+            row.setAttribute('data-id', articleId);
+            row.innerHTML = `
+                <td class="px-4 py-2">${articleName}</td>
+                <td class="px-4 py-2">${articlePrice.toFixed(2)}</td>
+                <td class="px-4 py-2">
+                    <input type="number" name="quantities[${articleId}]" value="1" class="quantityInput border px-2 py-1 rounded" min="1" max="${articleStock}" onchange="updateTotalAmount()">
+                </td>
+                <td class="px-4 py-2">${articlePrice.toFixed(2)}</td>
+                <td class="px-4 py-2">
+                    <button type="button" class="removeArticleButton bg-red-500 text-white py-1 px-3 rounded">Supprimer</button>
+                </td>
+            `;
+            selectedArticlesTable.appendChild(row);
+        } else {
+            const row = selectedArticlesTable.querySelector(`tr[data-id="${articleId}"]`);
+            if (row) row.remove();
+        }
+
+        updateTotalAmount();
+    }
+
+    function updateTotalAmount() {
+        let totalAmount = 0;
+
+        selectedArticlesTable.querySelectorAll('tr').forEach(row => {
+            const quantityInput = row.querySelector('.quantityInput');
+            const price = parseFloat(row.querySelector('td:nth-child(2)').textContent);
+            const quantity = parseInt(quantityInput.value, 10);
+            const rowTotal = price * quantity;
+
+            row.querySelector('td:nth-child(4)').textContent = rowTotal.toFixed(2);
+            totalAmount += rowTotal;
+        });
+
+        totalAmountSpan.textContent = totalAmount.toFixed(2);
+    }
+
+    function removeArticle(event) {
+        if (!event.target.classList.contains('removeArticleButton')) return;
+        const row = event.target.closest('tr');
+        row.remove();
+        updateTotalAmount();
+    }
+
+    function handlePagination() {
+        const filteredRows = rows.filter(row => row.textContent.toLowerCase().includes(searchInput.value.toLowerCase()));
+
+        const totalPages = Math.ceil(filteredRows.length / itemsPerPage);
+        paginationControls.innerHTML = '';
+
+        for (let i = 1; i <= totalPages; i++) {
+            const pageBtn = document.createElement('button');
+            pageBtn.className = `py-2 px-4 rounded ${i === currentPage ? 'bg-purple-600 text-white' : 'bg-gray-200'}`;
+            pageBtn.textContent = i;
+            pageBtn.addEventListener('click', () => {
+                currentPage = i;
+                updateRows();
+            });
+            paginationControls.appendChild(pageBtn);
+        }
+
+        updateRows();
+    }
+
+    function updateRows() {
+        const filteredRows = rows.filter(row => row.textContent.toLowerCase().includes(searchInput.value.toLowerCase()));
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = currentPage * itemsPerPage;
+
+        articlesList.innerHTML = '';
+        filteredRows.slice(startIndex, endIndex).forEach(row => articlesList.appendChild(row));
+    }
+
+    searchInput.addEventListener('input', handlePagination);
+
+    rows.forEach(row => {
+        row.querySelector('input.articleCheckbox').addEventListener('change', handleArticleSelection);
+    });
+
+    selectedArticlesTable.addEventListener('click', removeArticle);
+    saveDetteBtn.addEventListener('click', () => {
+        showAlert('success', 'Dette enregistrée avec succès !');
+    });
+
+    handlePagination();
+</script>
+
+{% endblock %}

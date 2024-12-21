@@ -1,0 +1,161 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container mx-auto p-6">
+    <!-- Conteneur principal -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-bold text-purple-800 mb-4">Ajouter un Client</h2>
+            <form method="post" action="{{ path('client_add') }}">
+                <div class="mb-4">
+                    <label for="surname" class="block font-medium text-gray-700">Prénom et Nom</label>
+                    <div class="flex items-center">
+                        <i class="fas fa-user mr-2 text-gray-500"></i>
+                        <input type="text" id="surname" name="surname"
+                               class="border border-gray-300 rounded px-4 py-2 w-full focus:outline-none focus:ring focus:ring-green-300">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="telephone" class="block font-medium text-gray-700">Téléphone</label>
+                    <div class="flex items-center">
+                        <i class="fas fa-phone mr-2 text-gray-500"></i>
+                        <input type="text" id="telephoneC" name="telephone"
+                               class="border border-gray-300 rounded px-4 py-2 w-full focus:outline-none focus:ring focus:ring-green-300"
+                               oninput="searchClientByPhone()">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="adresse" class="block font-medium text-gray-700">Adresse</label>
+                    <div class="flex items-center">
+                        <i class="fas fa-home mr-2 text-gray-500"></i>
+                        <input type="text" id="adresse" name="adresse"
+                               class="border border-gray-300 rounded px-4 py-2 w-full focus:outline-none focus:ring focus:ring-green-300">
+                    </div>
+                </div>
+
+
+                <div class="mb-4 flex items-center">
+                    <label class="block font-medium text-gray-700 mr-4">Créer un compte</label>
+                    <div class="flex items-center">
+
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="toggleAccountCheckbox" class="sr-only">
+                            <div id="toggleTrack" class="w-11 h-6 bg-gray-300 rounded-full">
+                                <div id="toggleThumb" class="w-5 h-5 bg-white rounded-full shadow-md absolute top-0.5 left-0.5"></div>
+                            </div>
+                        </label>
+
+                        <span id="toggleLabel" class="ml-3 text-sm font-medium text-gray-900">Non</span>
+                    </div>
+                </div>
+                <div id="accountForm" class="hidden">
+                    <div class="mb-4">
+                        <label for="login" class="block font-medium text-gray-700">Login</label>
+                        <input type="text" id="login" name="login"
+                               class="border border-gray-300 rounded px-4 py-2 w-full focus:outline-none focus:ring focus:ring-green-300">
+                    </div>
+                    <div class="mb-4">
+                        <label for="password" class="block font-medium text-gray-700">Mot de passe</label>
+                        <input type="password" id="password" name="password"
+                               class="border border-gray-300 rounded px-4 py-2 w-full focus:outline-none focus:ring focus:ring-green-300">
+                    </div>
+                </div>
+                <button type="submit"
+                        class="w-full bg-purple-400 text-white py-2 rounded-md hover:bg-purple-600">Ajouter</button>
+            </form>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-bold text-purple-800 mb-6 text-center">Suivi de Dette</h2>
+            <div class="mb-6">
+                <label for="telephone" class="text-gray-700 font-semibold flex items-center">
+                    <i class="fas fa-phone mr-2"></i>Tél :
+                </label>
+                <input type="tel" id="telephone" name="telephone" required
+                       class="flex-grow p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                       placeholder="Saisir le numéro..." oninput="searchClientByPhone()">
+            </div>
+            <div class="flex justify-center gap-4 mb-6">
+                <button class="bg-red-500 text-white px-4 py-2 rounded-md flex items-center hover:bg-red-600">
+                    <i class="fas fa-user mr-2"></i>Infos
+                </button>
+                <a href="#" id="dettesButton">
+                    <button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md flex items-center hover:bg-gray-400">
+                        <i class="fas fa-file-invoice-dollar mr-2"></i>Dettes
+                    </button>
+                </a>
+                <a href="#" id="newDebtBtn">
+                    <button class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md flex items-center hover:bg-gray-400">
+                        <i class="fas fa-plus mr-2"></i>Nouvelle
+                    </button>
+                </a>
+            </div>
+            <div class="flex flex-col items-center">
+
+                <div class="w-32 h-32 bg-gray-300 rounded-full overflow-hidden mb-6 flex items-center justify-center">
+                    <i class="fas fa-user-circle text-6xl text-gray-500"></i>
+                </div>
+
+                <div class="w-full space-y-4">
+                    <div>
+                        <label for="nomResultat" class="block text-gray-700 font-semibold mb-1">Nom :</label>
+                        <input type="text" id="nomResultat" name="nomResultat" readonly
+                               class="w-full p-2 border border-gray-300 rounded-md shadow-sm bg-gray-100">
+                    </div>
+                    <div>
+                        <label for="telephoneResultat" class="block text-gray-700 font-semibold mb-1">Téléphone :</label>
+                        <input type="text" id="telephoneResultat" name="telephoneResultat" readonly
+                               class="w-full p-2 border border-gray-300 rounded-md shadow-sm bg-gray-100">
+                    </div>
+                    <div>
+                        <label for="adresseResultat" class="block text-gray-700 font-semibold mb-1">Adresse :</label>
+                        <input type="text" id="adresseResultat" name="adresseResultat" readonly
+                               class="w-full p-2 border border-gray-300 rounded-md shadow-sm bg-gray-100">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <script src="{{ asset('js/javascript.js') }}"></script>
+
+    <script>
+        function searchClientByPhone() {
+            const telephone = document.getElementById('telephone').value;
+            if (telephone.length >= 3) {
+                fetch(`/api/clients/${telephone}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data) {
+                            document.getElementById('nomResultat').value = data.surname || '';
+                            document.getElementById('telephoneResultat').value = data.telephone || '';
+                            document.getElementById('adresseResultat').value = data.adresse || '';
+                        }
+                    })
+                    .catch(error => console.error('Erreur:', error));
+            }
+        }
+        document.getElementById('newDebtBtn').addEventListener('click', function() {
+            const phoneNumber = document.getElementById('telephone').value.trim();
+
+            if (phoneNumber) {
+
+                window.location.href = `/nouvelleDette?telephone=${encodeURIComponent(phoneNumber)}`;
+            } else {
+                alert("Veuillez entrer un numéro de téléphone.");
+            }
+        });
+
+        document.getElementById('dettesButton').addEventListener('click', function() {
+            const telephone = document.getElementById('telephone').value;
+            if (telephone.length >= 3) {
+                window.location.href = `/listDettesClient?telephone=${telephone}`;
+            }
+        });
+
+    </script>
+
+{% endblock %}

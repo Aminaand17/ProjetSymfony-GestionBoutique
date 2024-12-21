@@ -1,0 +1,201 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container mx-auto p-6">
+    <h1 class="text-2xl font-bold mb-4">Liste des Articles</h1>
+
+    <!-- Filtres et barre de recherche -->
+    <div class="flex flex-col md:flex-row justify-between items-center mb-4">
+        <!-- Filtres -->
+        <div class="flex space-x-2 mb-4 md:mb-0">
+            <button onclick="applyFilter('all')" class="bg-purple-400 text-white px-4 py-2 rounded hover:bg-purple-700 flex items-center">
+                <i class="fas fa-list mr-2"></i> Tous
+            </button>
+            <button onclick="applyFilter('disponible')" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center">
+                <i class="fas fa-check mr-2"></i> Disponible
+            </button>
+            <button onclick="applyFilter('rupture')" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700 flex items-center">
+                <i class="fas fa-exclamation-circle mr-2"></i> Rupture
+            </button>
+        </div>
+        <!-- Barre de recherche et bouton -->
+        <div class="flex items-center space-x-4 w-full md:w-auto">
+            <input 
+                type="text" 
+                id="searchBox" 
+                placeholder="Rechercher un article..." 
+                class="border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring focus:ring-pink-300 w-full md:w-auto">
+            <button onclick="togglePopup(true)" class="bg-purple-400 text-white px-4 py-2 rounded hover:bg-purple-700 flex items-center">
+                <i class="fas fa-plus mr-2"></i> Nouvel Article
+            </button>
+        </div>
+    </div>
+
+    <!-- Table des articles -->
+    <div class="flex justify-center">
+        <table class="w-full table-auto border border-gray-300 rounded-lg">
+            <thead>
+                <tr class="bg-purple-400 text-white">
+                    <th class="px-4 py-2 text-left"><i class="fas fa-tags"></i> Libellé</th>
+                    <th class="px-4 py-2 text-left"><i class="fas fa-dollar-sign"></i> Prix</th>
+                    <th class="px-4 py-2 text-left"><i class="fas fa-box"></i> Quantité en Stock</th>
+                </tr>
+            </thead>
+            <tbody id="articlesTable">
+                {% for article in articles %}
+                <tr class="border-b hover:bg-gray-100 py-4">
+                    <td class="px-4 py-6">{{ article.libelle }}</td>
+                    <td class="px-4 py-6">{{ article.prix }}</td>
+                    <td class="px-4 py-6">{{ article.qteStock }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3" class="px-4 py-2 text-center">Aucun article trouvé.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div id="paginationControls" class="mt-4 flex justify-center space-x-2"></div>
+</div>
+
+<!-- Pop-up pour Ajouter un Article -->
+<div id="popup" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center hidden">
+    <div class="bg-white p-6 rounded-lg w-96 relative">
+        <!-- Icône de fermeture -->
+        <button onclick="togglePopup(false)" class="absolute top-2 right-2 text-gray-500 hover:text-black">
+            <i class="fas fa-times"></i>
+        </button>
+
+        <!-- Formulaire -->
+        <form id="addArticleForm" method="post" action="{{ path('article_add') }}">
+            <div class="mb-4">
+                <label for="libelle" class="block font-medium text-gray-700">Libellé</label>
+                <input type="text" id="libelle" name="libelle" class="border border-gray-300 rounded px-4 py-2 w-full" required>
+            </div>
+            <div class="mb-4">
+                <label for="prix" class="block font-medium text-gray-700">Prix</label>
+                <input type="number" id="prix" name="prix" class="border border-gray-300 rounded px-4 py-2 w-full" step="0.01" required>
+            </div>
+            <div class="mb-4">
+                <label for="quantite" class="block font-medium text-gray-700">Quantité en Stock</label>
+                <input type="number" id="quantite" name="quantite" class="border border-gray-300 rounded px-4 py-2 w-full" required>
+            </div>
+            <div class="flex justify-end space-x-2">
+                <button type="button" onclick="togglePopup(false)" class="bg-red-600 text-white px-4 py-2 rounded">
+                    <i class="fas fa-times-circle"></i> Annuler
+                </button>
+                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">
+                    <i class="fas fa-check-circle"></i> Enregistrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function togglePopup(show) {
+        const popup = document.getElementById('popup');
+        popup.style.display = show ? 'flex' : 'none';
+    }
+
+    const articlesTable = document.getElementById('articlesTable');
+    const paginationControls = document.getElementById('paginationControls');
+    const searchBox = document.getElementById('searchBox');
+    const rows = Array.from(articlesTable.querySelectorAll('tr'));
+    const itemsPerPage = 4; 
+    let currentPage = 1;
+
+    function showPage(page) {
+        rows.forEach((row, index) => {
+            row.style.display = index >= (page - 1) * itemsPerPage && index < page * itemsPerPage ? '' : 'none';
+        });
+        updatePaginationControls();
+    }
+
+    function updatePaginationControls() {
+        paginationControls.innerHTML = '';
+        const totalPages = Math.ceil(rows.length / itemsPerPage);
+
+        for (let i = 1; i <= totalPages; i++) {
+            const button = document.createElement('button');
+            button.textContent = i;
+            button.className = `px-4 py-2 rounded-md ${i === currentPage ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-800'}`;
+            button.addEventListener('click', () => {
+                currentPage = i;
+                showPage(currentPage);
+            });
+            paginationControls.appendChild(button);
+        }
+    }
+
+    searchBox.addEventListener('input', function () {
+        const filter = searchBox.value.toLowerCase();
+        rows.forEach(row => {
+            const libelle = row.cells[0]?.innerText?.toLowerCase() ?? '';
+            row.style.display = libelle.includes(filter) ? '' : 'none';
+        });
+        currentPage = 1;
+        showPage(currentPage);
+    });
+
+    showPage(currentPage);
+
+    document.getElementById('addArticleForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const form = e.target;
+        const formData = new FormData(form);
+
+        const response = await fetch(form.action, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: formData,
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+                alert('Article ajouté avec succès !');
+                togglePopup(false);
+
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                    <td class="px-4 py-6">${data.article.libelle}</td>
+                    <td class="px-4 py-6">${data.article.prix}</td>
+                    <td class="px-4 py-6">${data.article.qteStock}</td>
+                `;
+                articlesTable.appendChild(newRow);
+                rows.push(newRow);
+                showPage(currentPage);
+                updatePaginationControls();
+            } else {
+                alert(data.error || 'Erreur lors de l\'ajout.');
+            }
+        } else {
+            alert('Erreur serveur.');
+        }
+    });
+
+     function applyFilter(filter) {
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('filter', filter);
+        window.location.search = urlParams.toString();
+    }
+
+    searchBox.addEventListener('input', function () {
+        const filter = searchBox.value.toLowerCase();
+        rows.forEach(row => {
+            const libelle = row.cells[0].innerText.toLowerCase();
+            row.style.display = libelle.includes(filter) ? '' : 'none';
+        });
+        currentPage = 1;
+        showPage(currentPage);
+    });
+
+    showPage(currentPage);
+</script>
+
+{% endblock %}

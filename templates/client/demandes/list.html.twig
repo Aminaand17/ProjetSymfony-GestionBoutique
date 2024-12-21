@@ -1,0 +1,106 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes Demandes{% endblock %}
+
+{% block body %}
+<div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">Mes Demandes de Dette</h1>
+    <div class="flex justify-between items-center mb-8">
+        <form id="filterForm" class="flex items-center space-x-4">
+            <label for="statut" class="font-medium text-gray-700">Filtrer par Statut :</label>
+            <select name="statut" id="statut" class="border-gray-300 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500">
+                <option value="">Tous</option>
+                <option value="En Cours" {% if statut == 'En Cours' %}selected{% endif %}>En Cours</option>
+                <option value="Acceptée" {% if statut == 'Acceptée' %}selected{% endif %}>Acceptée</option>
+                <option value="Annulée" {% if statut == 'Annulée' %}selected{% endif %}>Annulée</option>
+            </select>
+            <button type="submit" class="bg-purple-400 text-white px-4 py-2 rounded-lg hover:bg-purple-600">
+                Filtrer
+            </button>
+        </form>
+        <a href="{{ path('client_new_demande') }}" class="bg-purple-400 text-white px-6 py-3 rounded-lg hover:bg-purple-700 shadow">
+            Nouvelle Demande
+        </a>
+    </div>
+
+    <div class="flex justify-center">
+        <table class="w-full table-auto border border-gray-300 rounded-lg" id="demandesTable">
+            <thead>
+                <tr class="bg-purple-400 text-white">
+                    <th class="px-4 py-2 text-left">Date</th>
+                    <th class="px-4 py-2 text-left">Montant Dette</th>
+                    <th class="px-4 py-2 text-left">Statut</th>
+                    <th class="px-4 py-2 text-left">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for demande in demandes %}
+                    <tr class="border-b hover:bg-gray-100 py-4" data-id="{{ demande.id }}" data-statut="{{ demande.statut }}">
+                        <td class="px-4 py-6">{{ demande.dateDemande|date('d/m/Y') }}</td>
+                        <td class="px-4 py-6">{{ demande.montant }}</td>
+                        <td class="px-4 py-6" id="statut-{{ demande.id }}">{{ demande.statut }}</td>
+                        <td class="px-4 py-6">
+                            {% if demande.statut == 'Annulée' %}
+                                <button class="bg-yellow-400 text-white px-3 py-2 rounded hover:bg-yellow-600 relancer" data-id="{{ demande.id }}">
+                                    Relancer
+                                </button>
+                            {% else %}
+                                <a href="" class="bg-purple-400 text-white px-3 py-2 rounded hover:bg-blue-600">
+                                    Détail
+                                </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="4" class="px-4 py-2 text-center">Aucune demande trouvée.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+
+    document.getElementById('filterForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        let statut = document.getElementById('statut').value;
+        let rows = document.querySelectorAll('#demandesTable tbody tr');
+
+        rows.forEach(row => {
+            let rowStatut = row.getAttribute('data-statut');
+            row.style.display = statut && rowStatut !== statut ? 'none' : '';
+        });
+    });
+
+    document.querySelectorAll('.relancer').forEach(button => {
+        button.addEventListener('click', function() {
+            let demandeId = this.getAttribute('data-id');
+            let statutCell = document.getElementById(`statut-${demandeId}`);
+
+            fetch(`/client/demande/relance/${demandeId}`, {
+                method: 'POST', // Assuming you are using POST for state change
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ id: demandeId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    statutCell.innerText = 'En Cours'; // Mise à jour du statut
+                    this.remove(); // Suppression du bouton de relance
+                } else {
+                    alert('Erreur lors de la relance.');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('Une erreur est survenue.');
+            });
+        });
+    });
+</script>
+
+{% endblock %}

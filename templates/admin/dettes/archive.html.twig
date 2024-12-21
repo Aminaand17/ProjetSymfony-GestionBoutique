@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Archives des Dettes{% endblock %}
+
+{% block body %}
+    <br><br>
+    <h1 class="text-2xl font-bold mb-4">Archives des dettes soldées</h1>
+    <br>
+    <div class="flex justify-center">
+        <table class="w-full table-auto border border-gray-300 rounded-lg" id="archives-table">
+            <thead>
+                <tr class="bg-purple-400 text-white">
+                    <th class="px-4 py-2 text-left">Date</th>
+                    <th class="px-4 py-2 text-left">Montant</th>
+                    <th class="px-4 py-2 text-left">Montant Versé</th>
+                    <th class="px-4 py-2 text-left">Montant Restant</th>
+                    <th class="px-4 py-2 text-left">Statut</th>
+                </tr>
+            </thead>
+            <tbody id="archive-body">
+                <!-- Les archives seront ajoutées ici par JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Affichage des dettes archivées
+        const archives = {{ archives|json_encode|raw }}; // Utiliser les archives simulées en JavaScript
+        const archiveBody = document.getElementById('archive-body');
+        
+        archives.forEach(dette => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${dette.date}</td>
+                <td>${dette.montant}</td>
+                <td>${dette.montantVerse}</td>
+                <td>${dette.montantRestant}</td>
+                <td>${dette.statut}</td>
+            `;
+            archiveBody.appendChild(row);
+        });
+    </script>
+{% endblock %}

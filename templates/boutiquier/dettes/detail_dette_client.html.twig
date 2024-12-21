@@ -1,0 +1,130 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container mx-auto p-6">
+    <div class="flex space-x-4 mb-6">
+        <div class="w-1/2 bg-white p-6 rounded-lg shadow-lg">
+            <h3 class="text-xl font-bold text-purple-800 mb-4">Informations Client</h3>
+            <p><strong>Surname :</strong> {{ dette.client.surname }}</p>
+            <p><strong>Téléphone :</strong> {{ dette.client.telephone }}</p>
+            <p><strong>Adresse :</strong> {{ dette.client.adresse }}</p>
+        </div>
+        <div class="w-1/2 bg-white p-6 rounded-lg shadow-lg">
+            <h3 class="text-xl font-bold text-purple-800 mb-4">Montants de la Dette</h3>
+            <p><strong>Montant Total :</strong> {{ dette.montant }}</p>
+            <p><strong>Montant Versé :</strong> <span id="montantVerser">{{ dette.montantVerser }}</span></p>
+            <p><strong>Montant Restant :</strong> <span id="montantRestant">{{ dette.montant - dette.montantVerser }}</span></p>
+        </div>
+    </div>
+
+
+    <div class="flex space-x-4 mb-6">
+        <div class="w-2/3 bg-white p-6 rounded-lg shadow-lg">
+            <h3 class="text-xl font-bold text-purple-800 mb-4">Articles de la Dette</h3>
+            <table class="w-full table-auto border-collapse">
+                <thead>
+                    <tr class="bg-gray-100">
+                        <th class="py-2 px-4 text-left">Libellé</th>
+                        <th class="py-2 px-4 text-left">Prix</th>
+                        <th class="py-2 px-4 text-left">Quantité</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set totalArticles = 0 %}
+                    {% for article in dette.articles %}
+                        <tr>
+                            <td class="py-2 px-4">{{ article.libelle }}</td>
+                            <td class="py-2 px-4">{{ article.prix }}</td>
+                            <td class="py-2 px-4">{{ article.qteStock }}</td> <!-- Affichage de la quantité spécifiée -->
+                        </tr>
+                        {% set totalArticles = totalArticles + (article.prix * article.qteStock) %} <!-- Utiliser qteDue ici -->
+                    {% endfor %}
+                    <tr class="bg-gray-100">
+                        <td colspan="2" class="py-2 px-4 text-right font-bold">Total Articles :</td>
+                        <td class="py-2 px-4">{{ totalArticles }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="w-1/3 bg-white p-6 rounded-lg shadow-lg">
+            <h3 class="text-xl font-bold text-purple-800 mb-4">Paiements effectués</h3>
+            <table class="w-full table-auto border-collapse">
+                <thead>
+                    <tr class="bg-gray-100">
+                        <th class="py-2 px-4 text-left">Date</th>
+                        <th class="py-2 px-4 text-left">Montant</th>
+                    </tr>
+                </thead>
+                <tbody id="paiementList">
+                    {% for paiement in dette.paiements %}
+                        <tr>
+                            <td class="py-2 px-4">{{ paiement.date | date("d/m/Y") }}</td>
+                            <td class="py-2 px-4">{{ paiement.montant }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
+        <h3 class="text-xl font-bold text-purple-800 mb-4">Effectuer un Paiement</h3>
+        <form method="post" action="{{ path('paiement_dette', { 'id': dette.id }) }}" id="paiementForm" class="mt-4 w-1/3 ml-auto">
+            <div class="mb-4">
+                <label for="montant" class="block text-lg">Montant à Payer :</label>
+                <input type="number" name="montant" id="montant" class="mt-2 p-2 border rounded" 
+                       min="1" max="{{ dette.montant - dette.montantVerser }}" required>
+            </div>
+            <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                Effectuer le Paiement
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const paiementForm = document.querySelector('#paiementForm');
+        const paiementMontantInput = document.querySelector('#montant');
+        const paiementList = document.querySelector('#paiementList');
+        const montantVerserElement = document.querySelector('#montantVerser');
+        const montantRestantElement = document.querySelector('#montantRestant');
+        
+        let montantVerser = parseFloat(montantVerserElement.textContent);
+        let montantRestant = parseFloat(montantRestantElement.textContent);
+
+        paiementForm.addEventListener('submit', function (event) {
+            event.preventDefault(); // Empêcher la soumission du formulaire
+
+            const montantPaye = parseFloat(paiementMontantInput.value);
+
+
+            if (isNaN(montantPaye) || montantPaye <= 0) {
+                alert('Veuillez entrer un montant valide.');
+                return;
+            }
+
+            if (montantPaye > montantRestant) {
+                alert('Le montant à payer ne peut pas être supérieur au montant restant.');
+                return;
+            }
+            const row = document.createElement('tr');
+            const datePaiement = new Date().toLocaleDateString('fr-FR');
+            row.innerHTML = `
+                <td class="py-2 px-4">${datePaiement}</td>
+                <td class="py-2 px-4">${montantPaye.toFixed(2)}</td>
+            `;
+            paiementList.appendChild(row);
+            montantVerser += montantPaye;
+            montantRestant -= montantPaye;
+            montantVerserElement.textContent = montantVerser.toFixed(2);
+            montantRestantElement.textContent = montantRestant.toFixed(2);
+            if (montantRestant === 0) {
+                alert('La dette est soldée.');
+            }
+            paiementMontantInput.value = '';
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Détails de la Demande{% endblock %}
+
+{% block body %}
+    <div class="flex gap-6">
+        <div class="bg-blue-90 p-6 rounded-lg shadow-md w-1/2">
+            <h3 class="text-2xl font-semibold text-blue-700 mb-4">Informations Client</h3>
+            <div class="flex gap-6 items-center">
+                <div class="w-32 h-32 bg-gray-300 rounded-full overflow-hidden flex items-center justify-center">
+                    <i class="fas fa-user-circle text-6xl text-gray-600"></i>
+                </div>
+                <div>
+                    <p class="text-lg text-gray-700 mb-2"><strong>Nom :</strong> {{ demande.client.surname }}</p>
+                    <p class="text-lg text-gray-700 mb-2"><strong>Téléphone :</strong> {{ demande.client.telephone }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-blue-90 p-6 rounded-lg shadow-md w-1/2">
+            <h3 class="text-2xl font-semibold text-blue-700 mb-4">Détails de la Dette</h3>
+            <p class="text-lg text-gray-700 mb-2"><strong>Montant Total :</strong> {{ montantTotal|number_format(0, ',', ' ') }}</p>
+            <p class="text-lg text-gray-700 mb-2"><strong>Montant Versé :</strong> {{ montantVerser|number_format(0, ',', ' ') }}</p>
+            <p class="text-lg text-gray-700"><strong>Montant Restant :</strong> {{ montantRestant|number_format(0, ',', ' ') }}</p>
+
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-md mt-6">
+        <h3 class="text-2xl font-semibold text-blue-700 mb-4">Articles de la Dette</h3>
+        <table class="table-auto w-full border-separate border-spacing-2">
+            <thead>
+                <tr class="text-lg text-gray-500">
+                    <th class="text-left px-4 py-2">Libellé</th>
+                    <th class="text-left px-4 py-2">Prix</th>
+                    <th class="text-left px-4 py-2">Quantité</th>
+                    <th class="text-left px-4 py-2">Montant</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for article in articles %}
+                    <tr class="text-lg text-gray-700">
+                        <td class="border-b py-2 px-4">{{ article.libelle }}</td>
+                        <td class="border-b py-2 px-4">{{ article.prix|number_format(0, ',', ' ') }}</td>
+                        <td class="border-b py-2 px-4">{{ article.qteStock }}</td>
+                        <td class="border-b py-2 px-4">{{ (article.prix * article.qteStock)|number_format(0, ',', ' ') }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <div class="text-right mt-6">
+            <strong class="text-lg">Total :</strong> {{ montantTotal|number_format(0, ',', ' ') }}
+        </div>
+    </div>
+{% endblock %}

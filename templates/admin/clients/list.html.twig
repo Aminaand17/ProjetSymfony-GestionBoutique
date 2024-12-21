@@ -1,0 +1,174 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des Clients{% endblock %}
+
+{% block body %}
+<h1 class="text-2xl font-bold mb-4">Liste des clients</h1>
+
+<!-- Boutons de filtre -->
+<div class="flex justify-start space-x-4 mb-6">
+    <button onclick="filterClients('all')" class="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-500 hover:text-white">
+        Tous les clients
+    </button>
+    <button onclick="filterClients('with_account')" class="bg-purple-400 text-white px-4 py-2 rounded hover:bg-purple-600">
+        Avec compte
+    </button>
+    <button onclick="filterClients('without_account')" class="bg-red-400 text-white px-4 py-2 rounded hover:bg-red-600">
+        Sans compte
+    </button>
+</div>
+
+<!-- Table des clients -->
+<div class="flex justify-center">
+    <table class="w-full table-auto border border-gray-300 rounded-lg" id="clients-table">
+        <thead>
+            <tr class="bg-purple-400 text-white">
+                <th class="px-4 py-2 text-left">Prénom et Nom</th>
+                <th class="px-4 py-2 text-left">Téléphone</th>
+                <th class="px-4 py-2 text-left">Adresse</th>
+                <th class="px-4 py-2 text-left">Compte utilisateur</th>
+                <th class="px-4 py-2 text-left">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="clients-body">
+            {% for client in clients %}
+            <tr class="border-b hover:bg-gray-100" data-has-account="{{ client.compte ? 'yes' : 'no' }}" id="client-{{ client.id }}">
+                <td class="px-4 py-2">{{ client.surname }}</td>
+                <td class="px-4 py-2">{{ client.telephone }}</td>
+                <td class="px-4 py-2">{{ client.adresse }}</td>
+                <td class="px-4 py-2 account-status">{{ client.compte ? 'Oui' : 'Non' }}</td>
+                <td class="px-4 py-2">
+                    {% if not client.compte %}
+                    <button onclick="openCreateAccountPopup({{ client.id }}, '{{ client.surname }}')" 
+                            class="bg-green-400 text-white px-3 py-1 rounded hover:bg-green-600">
+                        Créer un compte
+                    </button>
+                    {% else %}
+                    <span class="text-gray-500">Compte existant</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="px-4 py-2 text-center">Aucun client trouvé.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+<div id="paginationControls" class="mt-4 flex justify-center space-x-2"></div>
+
+<!-- Popup Modal pour création de compte -->
+<div id="createAccountModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+    <div class="bg-white w-1/3 rounded-lg p-6">
+        <h2 class="text-xl font-bold mb-4">Créer un compte pour <span id="clientName"></span></h2>
+        <form id="createAccountForm">
+            <input type="hidden" id="clientId">
+            <div class="mb-4">
+                <label for="login" class="block text-sm font-medium text-gray-700">Login</label>
+                <input type="text" id="login" name="login" 
+                       class="w-full border border-gray-300 rounded px-3 py-2" required>
+            </div>
+            <div class="mb-4">
+                <label for="password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
+                <input type="password" id="password" name="password" 
+                       class="w-full border border-gray-300 rounded px-3 py-2" required>
+            </div>
+            <div class="flex justify-end space-x-2">
+                <button type="button" onclick="closeCreateAccountPopup()" 
+                        class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-500">
+                    Annuler
+                </button>
+                <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                    Créer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Script -->
+<script>
+    // Gestion des lignes de clients
+    const rows = Array.from(document.querySelectorAll("#clients-body tr"));
+    const paginationControls = document.getElementById("paginationControls");
+    const itemsPerPage = 7;
+    let currentPage = 1;
+    let filteredRows = [...rows];
+
+    // Fonction pour ouvrir le popup
+    function openCreateAccountPopup(clientId, clientName) {
+        document.getElementById("createAccountModal").classList.remove("hidden");
+        document.getElementById("clientId").value = clientId;
+        document.getElementById("clientName").textContent = clientName;
+    }
+
+    // Fonction pour fermer le popup
+    function closeCreateAccountPopup() {
+        document.getElementById("createAccountModal").classList.add("hidden");
+        document.getElementById("createAccountForm").reset();
+    }
+
+    // Création de compte (soumission du formulaire)
+    document.getElementById("createAccountForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const clientId = document.getElementById("clientId").value;
+        const login = document.getElementById("login").value;
+        const password = document.getElementById("password").value;
+
+        // Simuler la création via AJAX (à remplacer par une requête réelle)
+        setTimeout(() => {
+            // Mise à jour visuelle du client
+            const clientRow = document.getElementById(`client-${clientId}`);
+            const accountStatus = clientRow.querySelector(".account-status");
+            accountStatus.textContent = "Oui";
+
+            const actionCell = clientRow.querySelector("td:last-child");
+            actionCell.innerHTML = '<span class="text-gray-500">Compte existant</span>';
+
+            // Fermer le popup
+            closeCreateAccountPopup();
+            alert(`Compte créé avec succès pour le client ID ${clientId}`);
+        }, 500);
+    });
+
+    // Autres fonctions pour filtre et pagination
+    function filterClients(filter) {
+        if (filter === "all") {
+            filteredRows = rows;
+        } else {
+            const hasAccount = filter === "with_account" ? "yes" : "no";
+            filteredRows = rows.filter(row => row.dataset.hasAccount === hasAccount);
+        }
+        currentPage = 1;
+        showPage(currentPage, filteredRows);
+    }
+
+    function showPage(page, rowsToShow = filteredRows) {
+        rows.forEach(row => row.style.display = "none");
+        const start = (page - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        rowsToShow.slice(start, end).forEach(row => row.style.display = "");
+        updatePaginationControls(rowsToShow.length);
+    }
+
+    function updatePaginationControls(totalRows) {
+        paginationControls.innerHTML = "";
+        const totalPages = Math.ceil(totalRows / itemsPerPage);
+        for (let i = 1; i <= totalPages; i++) {
+            const button = document.createElement("button");
+            button.textContent = i;
+            button.className = `px-4 py-2 rounded-md ${i === currentPage ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-800'}`;
+            button.addEventListener("click", () => {
+                currentPage = i;
+                showPage(currentPage);
+            });
+            paginationControls.appendChild(button);
+        }
+    }
+
+    showPage(currentPage);
+</script>
+{% endblock %}

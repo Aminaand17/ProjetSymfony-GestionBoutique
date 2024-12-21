@@ -1,0 +1,163 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h1 class="text-2xl font-bold mb-4">Liste des clients</h1>
+    <div class="flex justify-between items-center mb-4 w-full mx-auto mt-10">
+        <input 
+            type="text" 
+            placeholder="Téléphone du client" 
+            class="border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring focus:ring-pink-300" 
+            id="searchBox">
+        <button onclick="togglePopup(true)" 
+                class="bg-purple-400 text-white px-4 py-2 rounded hover:bg-purple-700 flex items-center">
+            <i class="fas fa-plus mr-2"></i> Nouveau client
+        </button>
+    </div>
+    <div class="flex justify-center">
+        <table class="w-full table-auto border border-gray-300 rounded-lg" id="clientTable">
+            <thead>
+                <tr class="bg-purple-400 text-white">
+                    <th class="px-4 py-2 text-left">Prénom et Nom</th>
+                    <th class="px-4 py-2 text-left">Téléphone</th>
+                    <th class="px-4 py-2 text-left">Adresse</th>
+                    <th class="px-4 py-2 text-left">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for client in clients %}
+                    <tr class="border-b hover:bg-gray-100 py-4">
+                        <td class="px-4 py-6">{{ client.surname }}</td>
+                        <td class="px-4 py-6">{{ client.telephone }}</td>
+                        <td class="px-4 py-6">{{ client.adresse }}</td>
+                        <td class="px-4 py-6">
+                            <a href="#" class="bg-purple-400 text-white px-3 py-2 rounded hover:bg-purple-600">
+                                Détails
+                            </a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="4" class="px-4 py-2 text-center">Aucun client trouvé.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div id="paginationControls" class="mt-4 flex justify-center space-x-2"></div>
+    <div id="popup" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center hidden">
+        <div class="bg-white p-6 rounded-lg w-96 relative">
+            <button onclick="togglePopup(false)" class="absolute top-2 right-2 text-gray-500 hover:text-black">
+                <i class="fas fa-times"></i>
+            </button>
+            <h2 class="text-xl font-bold mb-4">Ajouter un client</h2>
+            <form method="post" action="{{ path('client_add') }}">
+                <label for="surname" class="block text-sm font-medium mb-2">Prénom et Nom</label>
+                <input 
+                    type="text" 
+                    name="surname" 
+                    id="surname" 
+                    class="border border-gray-300 rounded w-full px-4 py-2 mb-4 focus:outline-none focus:ring focus:ring-purple-300" 
+                    required>
+
+                <label for="telephone" class="block text-sm font-medium mb-2">Téléphone</label>
+                <input 
+                    type="text" 
+                    name="telephone" 
+                    id="telephone" 
+                    class="border border-gray-300 rounded w-full px-4 py-2 mb-4 focus:outline-none focus:ring focus:ring-purple-300" 
+                    required>
+
+                <label for="adresse" class="block text-sm font-medium mb-2">Adresse</label>
+                <input 
+                    type="text" 
+                    name="adresse" 
+                    id="adresse" 
+                    class="border border-gray-300 rounded w-full px-4 py-2 mb-4 focus:outline-none focus:ring focus:ring-purple-300" 
+                    required>
+
+                <div class="mb-4 flex items-center">
+                    <label class="block font-medium text-gray-700 mr-4">Créer un compte</label>
+                    <div class="flex items-center">
+
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="toggleAccountCheckbox" class="sr-only">
+                            <div id="toggleTrack" class="w-11 h-6 bg-gray-300 rounded-full">
+                                <div id="toggleThumb" class="w-5 h-5 bg-white rounded-full shadow-md absolute top-0.5 left-0.5"></div>
+                            </div>
+                        </label>
+
+                        <span id="toggleLabel" class="ml-3 text-sm font-medium text-gray-900">Non</span>
+                    </div>
+                </div>
+                <div id="accountForm" class="hidden">
+                    <div class="mb-4">
+                        <label for="login" class="block font-medium text-gray-700">Login</label>
+                        <input type="text" id="login" name="login"
+                               class="border border-gray-300 rounded px-4 py-2 w-full focus:outline-none focus:ring focus:ring-green-300">
+                    </div>
+                    <div class="mb-4">
+                        <label for="password" class="block font-medium text-gray-700">Mot de passe</label>
+                        <input type="password" id="password" name="password"
+                               class="border border-gray-300 rounded px-4 py-2 w-full focus:outline-none focus:ring focus:ring-green-300">
+                    </div>
+                </div>
+
+                <button type="submit" class="bg-purple-400 text-white px-4 py-2 rounded hover:bg-purple-600 w-full">
+                    Ajouter
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ asset('js/javascript.js') }}"></script>
+    
+    <script>
+        function togglePopup(show) {
+            const popup = document.getElementById('popup');
+            popup.style.display = show ? 'flex' : 'none';
+        }
+
+        const clientTable = document.getElementById('clientTable');
+        const paginationControls = document.getElementById('paginationControls');
+        const searchBox = document.getElementById('searchBox');
+        const rows = Array.from(clientTable.querySelectorAll('tbody tr'));
+        const itemsPerPage = 4;
+        let currentPage = 1;
+
+        function showPage(page) {
+            const visibleRows = rows.filter(row => row.style.display !== 'none');
+            visibleRows.forEach((row, index) => {
+                row.style.display = index >= (page - 1) * itemsPerPage && index < page * itemsPerPage ? '' : 'none';
+            });
+            updatePaginationControls(visibleRows.length);
+        }
+
+        function updatePaginationControls(totalRows) {
+            paginationControls.innerHTML = '';
+            const totalPages = Math.ceil(totalRows / itemsPerPage);
+
+            for (let i = 1; i <= totalPages; i++) {
+                const button = document.createElement('button');
+                button.textContent = i;
+                button.className = `px-4 py-2 rounded-md ${i === currentPage ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-800'}`;
+                button.addEventListener('click', () => {
+                    currentPage = i;
+                    showPage(currentPage);
+                });
+                paginationControls.appendChild(button);
+            }
+        }
+
+        searchBox.addEventListener('input', function () {
+            const filter = searchBox.value.toLowerCase();
+            rows.forEach(row => {
+                const telephone = row.cells[1]?.innerText?.toLowerCase() ?? '';
+                row.style.display = telephone.includes(filter) ? '' : 'none';
+            });
+            currentPage = 1;
+            showPage(currentPage);
+        });
+
+        showPage(currentPage);
+    </script>
+{% endblock %}

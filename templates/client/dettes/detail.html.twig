@@ -1,0 +1,77 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Détails de la Dette{% endblock %}
+
+{% block body %}
+<div class="container mx-auto p-6">
+
+    <h1 class="text-2xl font-bold mb-6">Détails de la Dette</h1>
+
+    <div class="grid grid-cols-2 gap-4 mb-6">
+
+        <!-- Carte : Informations du client -->
+        <div class="bg-green-100 shadow-lg rounded-lg p-6 transform hover:scale-105 transition-all duration-300 ease-in-out">
+            <h2 class="text-lg font-semibold mb-4">Mes Informations</h2>
+            <p><strong>Prénom :</strong> {{ client.surname }}</p>
+            <p><strong>Téléphone :</strong> {{ client.telephone }}</p>
+            <p><strong>Adresse :</strong> {{ client.adresse }}</p>
+        </div>
+
+        <!-- Carte : Montants de la dette -->
+        <div class="bg-green-100  shadow-lg rounded-lg p-6 transform hover:scale-105  transition-all duration-300 ease-in-out">
+            <h2 class="text-lg font-semibold mb-4">Montants de la Dette</h2>
+            <p><strong>Montant Total :</strong> {{ montantDette }} </p>
+            <p><strong>Montant Versé :</strong> {{ montantVerse }}</p>
+            <p><strong>Montant Restant :</strong> {{ montantRestant }} </p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+
+        <!-- Tableau : Articles -->
+        <div>
+            <h2 class="text-lg font-semibold mb-4">Articles de la Dette</h2>
+            <table class="table-auto w-full bg-white shadow-lg rounded-lg">
+                <thead class="bg-purple-300">
+                    <tr>
+                        <th class="px-4 py-2">Article</th>
+                        <th class="px-4 py-2">Prix</th>
+                        <th class="px-4 py-2">Quantité</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for article in articles %}
+                        <tr>
+                            <td class="border px-4 py-2">{{ article.libelle }}</td>
+                            <td class="border px-4 py-2">{{ article.prix }} </td>
+                            <td class="border px-4 py-2">{{ article.qteStock }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tableau : Paiements -->
+        <div>
+            <h2 class="text-lg font-semibold mb-4">Liste des Paiements</h2>
+            <table class="table-auto w-full bg-white shadow-lg rounded-lg">
+                <thead class="bg-purple-300">
+                    <tr>
+                        <th class="px-4 py-2">Date</th>
+                        <th class="px-4 py-2">Montant</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for paiement in paiements %}
+                        <tr>
+                            <td class="border px-4 py-2">{{ paiement.date|date('d/m/Y') }}</td>
+                            <td class="border px-4 py-2">{{ paiement.montant }} </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

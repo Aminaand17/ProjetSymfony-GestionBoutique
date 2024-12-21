@@ -1,17 +1,97 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
-        {% block stylesheets %}
-        {% endblock %}
+<html lang="fr">
 
-        {% block javascripts %}
-            {% block importmap %}{{ importmap('app') }}{% endblock %}
-        {% endblock %}
-    </head>
-    <body>
-        {% block body %}{% endblock %}
-    </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion Boutique</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .nav-link i {
+            margin-right: 0.75rem;
+        }
+
+        .nav-link:hover {
+            background-color: #ee82ee;
+            color: #fff;
+            padding-left: 1.5rem;
+        }
+
+        .nav-link.active {
+            background-color: #db2777;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 h-screen">
+
+    <div class="flex flex-col h-full">
+        <!-- Top Navigation Bar (fixed) -->
+        <header class="bg-white shadow-md fixed top-0 left-0 w-full z-10">
+            <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+                <!-- Search Bar -->
+                <div class="flex-grow">
+                    <input type="text" class="w-full py-2 px-4 border border-gray-300 rounded-lg"
+                        placeholder="Rechercher dans votre boutique">
+                </div>
+
+                <!-- User Profile -->
+                <div class="flex items-center space-x-2">
+                    <img src="https://via.placeholder.com/40" alt="Profil" class="w-10 h-10 rounded-full">
+                    <span class="font-medium">{{ app.user.nom | default('Utilisateur') }}</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main content -->
+        <div class="flex flex-1 mt-16"> <!-- Add mt-16 to avoid overlap with fixed header -->
+            <!-- Sidebar (fixed) -->
+            <nav class="w-64 bg-purple-400 text-white h-full fixed top-0 left-0 bottom-0">
+                <!-- Logo et Titre -->
+                <br><br><br><br>
+                <div class="px-6 py-6">
+                    <h1 class="text-xl font-bold">Gestion Boutique</h1>
+                </div>
+
+                <!-- Liens de navigation (personnalisés par rôle) -->
+                <ul class="space-y-4 mt-6">
+                    {% if 'ROLE_ADMIN' in app.user.roles %}
+                        <li><a href="{{ path('admin_dashboard')}}" class="nav-link"><i class="fas fa-home"></i> Dashboard</a></li>
+                        <li><a href="{{ path('admin_clients') }}" class="nav-link"><i class="fas fa-users"></i> Client </a></li>
+                        <li><a href="{{ path('admin_articles_list') }}" class="nav-link"><i class="fas fa-user-cog"></i> Article </a></li>
+                        <li><a href="{{ path('admin_dette_index') }}" class="nav-link"><i class="fas fa-box"></i> Dettes</a></li>
+                        <li><a href="{{ path('admin_users') }}" class="nav-link"><i class="fas fa-chart-line"></i> Utilisateurs</a></li>
+                        <li><a href=# class="nav-link"><i class="fas fa-envelope"></i> Compte</a></li>
+                    {% elseif 'ROLE_BOUTIQUIER' in app.user.roles %}
+                        <li><a href="{{ path('boutiquier_index') }}" class="nav-link"><i class="fas fa-home"></i> Dashboard</a></li>
+                        <li><a href="{{ path('client_index') }}" class="nav-link"><i class="fas fa-users"></i> Clients</a></li>
+                        <li><a href="{{ path('dette_index') }}" class="nav-link"><i class="fas fa-file-invoice-dollar"></i> Dettes</a></li>
+                        <li><a href="{{ path('demande_liste') }}" class="nav-link"><i class="fas fa-envelope"></i> Demandes</a></li>
+                        <li><a href="{{ path('articles_list') }}" class="nav-link"><i class="fas fa-envelope"></i> Articles</a></li>
+                    {% elseif 'ROLE_CLIENT' in app.user.roles %}
+                        <li><a href="{{ path('client_dettes') }}" class="nav-link"><i class="fas fa-file-invoice-dollar"></i> Mes Dettes</a></li>
+                        <li><a href="{{ path('client_demandes') }}" class="nav-link"><i class="fas fa-envelope"></i> Mes Demandes</a></li>
+                    {% else %}
+                        <li><span class="px-4 py-2 text-gray-300">Aucun menu disponible</span></li>
+                    {% endif %}
+                </ul>
+            </nav>
+
+            <!-- Content Area (with margin-left to avoid overlap with fixed sidebar) -->
+            <main class="flex-1 p-6 ml-64">
+                {% block body %}{% endblock %}
+            </main>
+        </div>
+    </div>
+</body>
+
 </html>

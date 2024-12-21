@@ -1,0 +1,82 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block body %}
+<div class="container mx-auto mt-10">
+    <h1 class="text-3xl font-bold text-center mb-6">Bienvenue sur votre Dashboard Boutiquier</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+        <div class="bg-blue-100 p-6 rounded-lg shadow-lg hover:scale-105 transform transition duration-300">
+            <h4 class="text-xl font-semibold text-blue-800">Total des Dettes</h4>
+            <p class="text-2xl font-bold mt-2">{{ totalDettes | number_format(2, ',', ' ') }} FCFA</p>
+        </div>
+        <div class="bg-green-100 p-6 rounded-lg shadow-lg hover:scale-105 transform transition duration-300">
+            <h4 class="text-xl font-semibold text-green-800">Nombre de Clients</h4>
+            <p class="text-2xl font-bold mt-2">{{ nombreClients }}</p>
+        </div>
+        <div class="bg-yellow-100 p-6 rounded-lg shadow-lg hover:scale-105 transform transition duration-300">
+            <h4 class="text-xl font-semibold text-yellow-800">Articles en Stock</h4>
+            <p class="text-2xl font-bold mt-2">{{ nombreArticlesStock }}</p>
+        </div>
+        <div class="bg-red-100 p-6 rounded-lg shadow-lg hover:scale-105 transform transition duration-300">
+            <h4 class="text-xl font-semibold text-red-800">Demandes</h4>
+            <p class="text-2xl font-bold mt-2">{{ nombreDemandes }}</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Liste des Clients -->
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <h4 class="text-xl font-bold mb-4 text-purple-800">Liste des Clients</h4>
+            <table class="table-auto w-full border-collapse">
+                <thead>
+                    <tr class="bg-gray-100">
+                        <th class="px-4 py-2">Surname</th>
+                        <th class="px-4 py-2">Téléphone</th>
+                        <th class="px-4 py-2">Montant Dette</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for client in clients %}
+                        <tr class="border-b">
+                            <td class="px-4 py-2">{{ client.surname }}</td>
+                            <td class="px-4 py-2">{{ client.telephone }}</td>
+                            <td class="px-4 py-2">{{ client.getTotalDettes() | number_format(2, ',', ' ') }} FCFA</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-gray-500 py-4">Aucun client trouvé</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <h4 class="text-xl font-bold mb-4 text-red-800">Articles en Rupture de Stock</h4>
+            <table class="table-auto w-full border-collapse">
+                <thead>
+                    <tr class="bg-gray-100">
+                        <th class="px-4 py-2">Article</th>
+                        <th class="px-4 py-2">Quantité Restante</th>
+                        <th class="px-4 py-2">Prix</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for article in articlesEnRupture %}
+                        <tr class="border-b">
+                            <td class="px-4 py-2">{{ article.libelle }}</td>
+                            <td class="px-4 py-2">{{ article.qteStock }}</td>
+                            <td class="px-4 py-2">{{ article.prix | number_format(2, ',', ' ') }} FCFA</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="3" class="text-center text-gray-500 py-4">Aucun article en rupture</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

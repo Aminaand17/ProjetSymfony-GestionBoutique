@@ -1,0 +1,101 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes Dettes{% endblock %}
+
+{% block body %}
+<div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+   
+
+    <!-- Statistiques sous forme de cartes -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-purple-400 text-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform">
+            <div class="flex items-center">
+                <div class="text-3xl mr-4">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-medium">Nombre de Dettes</p>
+                    <p class="text-2xl font-bold">{{ dettes|length }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-green-400 text-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform">
+            <div class="flex items-center">
+                <div class="text-3xl mr-4">
+                    <i class="fas fa-wallet"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-medium">Total Dettes</p>
+                    <p class="text-2xl font-bold">{{ dettes|reduce((total, dette) => total + dette.montant, 0) }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-yellow-400 text-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform">
+            <div class="flex items-center">
+                <div class="text-3xl mr-4">
+                    <i class="fas fa-hourglass-half"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-medium">Demandes en Cours</p>
+                    <p class="text-2xl font-bold">{{ demandesEnCours }}</p>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+     <h1 class="text-2xl font-bold text-gray-800 mb-6">Mes Dettes</h1>
+    <!-- Tableau des dettes -->
+    <div class="flex justify-center">
+        <table class="w-full table-auto border border-gray-300 rounded-lg" id="dettesTable">
+            <thead>
+                <tr class="bg-purple-400 text-white">
+                    <th class="px-4 py-2 text-left">Date</th>
+                    <th class="px-4 py-2 text-left">Montant</th>
+                    <th class="px-4 py-2 text-left">Montant Restant</th>
+                    <th class="px-4 py-2 text-left">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for dette in dettes %}
+                    <tr class="border-b hover:bg-gray-100 py-4" data-montant-restant="{{ dette.montantRestant }}">
+                        <td class="px-4 py-6">{{ dette.createAt|date('d/m/Y') }}</td>
+                        <td class="px-4 py-6">{{ dette.montant }}</td>
+                        <td class="px-4 py-6">{{ dette.montantRestant }}</td>
+                        <td class="px-4 py-6">
+                            <a href="{{ path('client_dette_detail', {'id': dette.id}) }}" class="bg-purple-400 text-white px-3 py-2 rounded hover:bg-purple-600">
+                            Voir Détails
+                            </a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="4" class="px-4 py-2 text-center">Aucune dette trouvée.</td>
+                    </tr>
+                {% endfor %}
+                
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Fonction pour filtrer les dettes par montant restant
+    document.getElementById('filterForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        let montantRestant = document.getElementById('filterMontantRestant').value;
+        let rows = document.querySelectorAll('#dettesTable tbody tr');
+
+        rows.forEach(function(row) {
+            let montantRestantCell = row.getAttribute('data-montant-restant');
+            if (montantRestant && parseInt(montantRestantCell) < parseInt(montantRestant)) {
+                row.style.display = 'none';
+            } else {
+                row.style.display = '';
+            }
+        });
+    });
+</script>
+{% endblock %}

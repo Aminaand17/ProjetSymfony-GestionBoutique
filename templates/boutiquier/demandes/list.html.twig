@@ -1,0 +1,113 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des Demandes{% endblock %}
+
+{% block body %}
+    <h1 class="text-2xl font-bold mb-4">Liste des Demandes</h1>
+    <form method="get" action="{{ path('demande_liste') }}" class="mb-4">
+    <label for="statutFilter" class="mr-2">Filtrer par statut:</label>
+    <select name="statut" id="statutFilter" class="p-2 border border-gray-300 rounded">
+        <option value="">Tous</option>
+        <option value="En Cours" {% if statutFilter == 'En Cours' %}selected{% endif %}>En Cours</option>
+        <option value="Accepter" {% if statutFilter == 'Accepter' %}selected{% endif %}>Accepter</option>
+        <option value="Refuser" {% if statutFilter == 'Refuser' %}selected{% endif %}>Refuser</option>
+    </select>
+    <button type="submit" class="ml-2 p-2 bg-purple-400 text-white rounded hover:bg-purple-600">Filtrer</button>
+</form>
+
+    <div class="flex justify-center">
+        <table class="w-full table-auto border border-gray-300 rounded-lg" id="detteTable">
+            <thead>
+                <tr class="bg-purple-400 text-white">
+                    <th class="px-4 py-2 text-left">Date</th>
+                    <th class="px-4 py-2 text-left">Montant Total</th>
+                    <th class="px-4 py-2 text-left">Nom Complet</th>
+                    <th class="px-4 py-2 text-left">Téléphone</th>
+                    <th class="px-4 py-2 text-left">Statut</th>
+                    <th class="px-4 py-2 text-left">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for dette in dettes %}
+                    {% set montantTotal = 0 %}
+                    {% for article in dette.articles %}
+                        {% set montantTotal = montantTotal + (article.prix * article.qteStock) %}
+                    {% endfor %}
+                    {% set montantRestant = montantTotal - dette.montantVerser %}
+
+                    <tr class="border-b hover:bg-gray-100 py-4" data-status="{{ dette.statutDemande }}">
+                        <td class="px-4 py-6">{{ dette.createAt|date('d/m/Y') }}</td>
+                        <td class="px-4 py-6">{{ montantTotal|number_format(0, ',', ' ') }}</td>
+                        <td class="px-4 py-6">{{ dette.client.surname }}</td>
+                        <td class="px-4 py-6">{{ dette.client.telephone }}</td>
+                        <td class="px-4 py-6">{{ dette.statutDemande }}</td>
+                        <td class="px-4 py-6">
+                            <a href="{{ path('demande_detail', {'id': dette.id}) }}" class="bg-purple-400 text-white px-3 py-2 rounded hover:bg-purple-600">
+                                Détails
+                            </a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="px-4 py-2 text-center">Aucune demande trouvée.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div id="paginationControls" class="mt-4 flex justify-center space-x-2"></div>
+
+    <script>
+        const detteTable = document.getElementById('detteTable');
+        const paginationControls = document.getElementById('paginationControls');
+        const rows = Array.from(detteTable.querySelectorAll('tr')).slice(1); // Skip the header row
+        const itemsPerPage = 5;
+        let currentPage = 1;
+
+        function showPage(page) {
+            rows.forEach((row, index) => {
+                row.style.display = index >= (page - 1) * itemsPerPage && index < page * itemsPerPage ? '' : 'none';
+            });
+            updatePaginationControls();
+        }
+
+        function updatePaginationControls() {
+            paginationControls.innerHTML = '';
+            const totalPages = Math.ceil(rows.length / itemsPerPage);
+
+            for (let i = 1; i <= totalPages; i++) {
+                const button = document.createElement('button');
+                button.textContent = i;
+                button.className = `px-4 py-2 rounded-md ${i === currentPage ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-800'}`;
+                button.addEventListener('click', () => {
+                    currentPage = i;
+                    showPage(currentPage);
+                });
+                paginationControls.appendChild(button);
+            }
+        }
+
+        showPage(currentPage);
+        const statutFilter = document.getElementById('statutFilter');
+        document.addEventListener('DOMContentLoaded', function() {
+            statutFilter.value = "";  // Sélectionner par défaut "Tous"
+            filterRows();  // Appliquer le filtre par défaut lors du chargement
+        });
+
+        statutFilter.addEventListener('change', filterRows);
+
+        function filterRows() {
+            const selectedStatus = statutFilter.value.toLowerCase().trim();
+            rows.forEach(row => {
+                const status = row.getAttribute('data-status').toLowerCase().trim();
+                if (selectedStatus === '' || status === selectedStatus) {
+                    row.style.display = ''; 
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            showPage(1);
+        }
+    </script>
+{% endblock %}

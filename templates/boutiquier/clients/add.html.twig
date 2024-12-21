@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<h1 class="text-2xl font-bold mb-4">Ajouter un client</h1>
+
+<div class="bg-white p-6 rounded-lg shadow-md w-full max-w-md mx-auto">
+    {{ form_start(form) }}
+        {{ form_row(form.surname) }}
+        {{ form_row(form.telephone) }}
+        {{ form_row(form.adresse) }}
+        {{ form_row(form.createAccount) }}
+        {{ form_row(form.submit) }}
+    {{ form_end(form) }}
+</div>
+{% endblock %}
